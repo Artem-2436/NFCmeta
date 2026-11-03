@@ -3,123 +3,79 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xcortex | NFC Test</title>
+<title>Xcortex | NFC Deep Scan</title>
 <style>
-    :root { --bg: #0a0b10; --accent: #0fb3a6; --text: #fff; --muted: #8b9bb4; }
+    :root { --bg: #0a0b10; --accent: #0fb3a6; --text: #fff; --muted: #8b9bb4; --danger: #ff5a2c; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { 
-        background-color: var(--bg); 
-        color: var(--text); 
-        min-height: 100vh; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        overflow: hidden;
+        background-color: var(--bg); color: var(--text); min-height: 100vh; 
+        display: flex; align-items: center; justify-content: center; overflow-x: hidden;
     }
-    
-    /* Анимированный фон */
-    .bg-mesh {
-        position: fixed; inset: 0; z-index: -1;
-        background: radial-gradient(circle at 20% 30%, #1a1f35, transparent 40%),
-                    radial-gradient(circle at 80% 70%, #2d1b1b, transparent 40%);
-        filter: blur(80px); opacity: 0.6;
-        animation: float 20s infinite alternate ease-in-out;
-    }
-    @keyframes float {
-        0% { transform: translate(0, 0) scale(1); }
-        100% { transform: translate(-20px, 20px) scale(1.1); }
-    }
-
-    .container { text-align: center; padding: 20px; width: 100%; max-width: 400px; }
+    .container { text-align: center; padding: 20px; width: 100%; max-width: 450px; }
     
     h1 { font-size: 2rem; margin-bottom: 10px; letter-spacing: -1px; }
     h1 span { color: var(--accent); }
-    p.desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 40px; line-height: 1.5; }
+    p.desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 30px; line-height: 1.5; }
 
-    /* Кнопка сканирования */
     #scan-btn {
-        width: 100%;
-        padding: 20px;
-        background: linear-gradient(135deg, #00bcd4, #006064);
-        border: none;
-        border-radius: 16px;
-        color: white;
-        font-size: 1.2rem;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 10px 30px rgba(0, 188, 212, 0.3);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
+        width: 100%; padding: 20px; background: linear-gradient(135deg, #00bcd4, #006064);
+        border: none; border-radius: 16px; color: white; font-size: 1.2rem; font-weight: 700;
+        cursor: pointer; box-shadow: 0 10px 30px rgba(0, 188, 212, 0.3); transition: all 0.3s ease;
+        position: relative; overflow: hidden;
     }
-    #scan-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0, 188, 212, 0.5); }
-    #scan-btn:active { transform: translateY(0); }
-    #scan-btn.scanning { background: #333; color: #aaa; pointer-events: none; }
+    #scan-btn:hover { transform: translateY(-3px); }
+    #scan-btn.scanning { background: #333; color: #aaa; pointer-events: none; animation: pulseBg 2s infinite; }
 
-    /* Индикатор ожидания */
-    .pulse-ring {
-        position: absolute; top: 50%; left: 50%;
-        width: 100px; height: 100px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-radius: 50%;
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-        pointer-events: none;
-    }
-    #scan-btn.scanning .pulse-ring {
-        animation: pulseAnim 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-    }
-    @keyframes pulseAnim {
-        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-    }
+    @keyframes pulseBg { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-    /* Результат */
+    /* Блок результатов */
     #result-area {
-        margin-top: 40px;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 12px;
-        padding: 20px;
-        display: none; /* Скрыто по умолчанию */
-        word-break: break-all;
-        font-family: monospace;
-        font-size: 0.9rem;
-        color: var(--accent);
-        text-align: left;
-        max-height: 300px;
-        overflow-y: auto;
+        margin-top: 30px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px; padding: 20px; display: none; text-align: left; word-break: break-all;
+        font-family: monospace; font-size: 0.85rem; max-height: 60vh; overflow-y: auto;
     }
-    .label { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 5px; display: block; }
-    .value { color: white; font-size: 1.1rem; margin-bottom: 15px; display: block; }
     
-    .error-msg { color: #ff5a2c; font-weight: bold; margin-top: 20px; display: none; }
+    .row { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+    .label { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; margin-bottom: 5px; display: block; }
+    .value { color: var(--accent); font-size: 1.1rem; font-weight: bold; }
+    .raw-json { color: #ccc; font-size: 0.75rem; white-space: pre-wrap; margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; }
+
+    .error-msg { color: var(--danger); font-weight: bold; margin-top: 20px; display: none; }
 </style>
 </head>
 <body>
 
-<div class="bg-mesh"></div>
-
 <div class="container">
     <h1>X<span>cortex</span></h1>
-    <p class="desc">Тест модуля Web NFC.<br>Нажми кнопку, затем приложи банковскую карту, проездной или метку NTag к задней панели телефона.</p>
+    <p class="desc">Deep NFC Scanner.<br>Покажет UID и все технические данные метки.</p>
 
-    <button id="scan-btn" onclick="startScan()">
-        📲 НАЧАТЬ СКАНИРОВАНИЕ
-        <div class="pulse-ring"></div>
-    </button>
+    <button id="scan-btn" onclick="startScan()">📲 НАЧАТЬ ГЛУБОКОЕ СКАНИРОВАНИЕ</button>
 
     <div id="error-msg" class="error-msg"></div>
 
     <div id="result-area">
-        <span class="label">UID Метки (Уникальный ID):</span>
-        <span class="value" id="res-uid">---</span>
+        <div class="row">
+            <span class="label">Статус:</span>
+            <span class="value" id="res-status">Успех</span>
+        </div>
+        <div class="row">
+            <span class="label">UID (Серийный номер):</span>
+            <span class="value" id="res-uid">---</span>
+        </div>
+        <div class="row">
+            <span class="label">Тип технологии:</span>
+            <span class="value" id="res-tech">---</span>
+        </div>
+        <div class="row">
+            <span class="label">Количество NDEF записей:</span>
+            <span class="value" id="res-count">0</span>
+        </div>
         
-        <span class="label">Тип технологии:</span>
-        <span class="value" id="res-tech">---</span>
-
-        <span class="label">Данные (NDEF Records):</span>
-        <pre id="res-data" style="color:white; font-size:0.8rem; white-space: pre-wrap;">---</pre>
+        <!-- Сюда выведем полный JSON ответа, чтобы увидеть всё -->
+        <div class="row">
+            <span class="label">Полные данные объекта (JSON):</span>
+            <pre class="raw-json" id="res-full">Загрузка...</pre>
+        </div>
     </div>
 </div>
 
@@ -130,84 +86,78 @@
     let reader = null;
 
     async function startScan() {
-        // 1. Проверка поддержки
+        // Проверка поддержки
         if (!('NDEFReader' in window)) {
-            showError("❌ Ваш браузер не поддерживает Web NFC.\nИспользуйте Chrome на Android с включенным NFC.");
+            showError("❌ Браузер не поддерживает Web NFC.");
             return;
         }
 
-        // 2. Подготовка UI
         btn.classList.add('scanning');
-        btn.innerText = "⏳ ОЖИДАНИЕ МЕТКИ...";
+        btn.innerText = "⏳ ЖДЕМ МЕТКУ...";
         resultArea.style.display = 'none';
         errorMsg.style.display = 'none';
 
         try {
-            // 3. Инициализация читателя
             reader = new NDEFReader();
             
-            // 4. Запуск сканирования
+            // Запускаем сканирование
             await reader.scan();
-            console.log("Scanning started...");
+            console.log("Scanning active...");
 
-            // 5. Обработка события чтения
+            // Слушаем событие чтения
             reader.addEventListener("reading", ({ serialNumber, records }) => {
-                console.log("Tag read:", serialNumber, records);
+                console.log("RAW DATA RECEIVED:", { serialNumber, records });
                 
-                // Останавливаем визуальное ожидание
                 btn.classList.remove('scanning');
-                btn.innerText = "✅ ГОТОВО";
+                btn.innerText = "✅ ДАННЫЕ ПОЛУЧЕНЫ";
                 
-                // Выводим данные
-                document.getElementById('res-uid').innerText = serialNumber || "Неизвестно";
+                // 1. Выводим UID
+                document.getElementById('res-uid').innerText = serialNumber || "Не определен";
                 
-                // Пытаемся определить технологию (это сложно точно сделать из JS, но попробуем вывести тип записи)
-                document.getElementById('res-tech').innerText = records.length > 0 ? "NDEF Format Detected" : "Raw Tag";
+                // 2. Пытаемся определить технологию по структуре records или просто пишем неизвестно
+                // В Web NFC API нет прямого поля "technology", его нужно эвристически определять или брать из других источников.
+                // Для демо напишем стандарт для карт:
+                document.getElementById('res-tech').innerText = records && records.length > 0 ? "NDEF Format" : "Raw Tag / EMV Card";
 
-                // Выводим содержимое записей
-                let dataOutput = "";
-                if (records && records.length > 0) {
-                    records.forEach((record, index) => {
-                        dataOutput += `Record ${index + 1}:\n`;
-                        dataOutput += `  Type: ${record.recordType}\n`;
-                        
-                        // Декодирование данных (если это текст)
-                        if (record.recordType === "text") {
-                            const decoder = new TextDecoder(record.encoding);
-                            dataOutput += `  Content: "${decoder.decode(record.data)}"\n`;
-                        } else if (record.recordType === "url") {
-                             const decoder = new TextDecoder("utf-8");
-                             dataOutput += `  URL: ${decoder.decode(record.data)}\n`;
-                        } else {
-                            // Для других типов показываем hex или размер
-                            dataOutput += `  Size: ${record.data.byteLength} bytes\n`;
-                        }
-                        dataOutput += "\n";
-                    });
-                } else {
-                    dataOutput = "Нет NDEF данных (возможно, обычная банковская карта защищена).\nНо UID получен успешно!";
-                }
+                // 3. Количество записей
+                const count = records ? records.length : 0;
+                document.getElementById('res-count').innerText = count;
+
+                // 4. Полный дамп данных в JSON
+                // Мы преобразуем Uint8Array в обычный массив чисел, чтобы JSON.stringify работал
+                const safeRecords = records ? records.map(r => ({
+                    type: r.recordType,
+                    encoding: r.encoding,
+                    data: Array.from(r.data) // Превращаем байты в массив чисел [1, 2, 3...]
+                })) : [];
+
+                const fullData = {
+                    uid: serialNumber,
+                    recordCount: count,
+                    records: safeRecords
+                };
+
+                document.getElementById('res-full').innerText = JSON.stringify(fullData, null, 2);
                 
-                document.getElementById('res-data').innerText = dataOutput;
                 resultArea.style.display = 'block';
             });
 
-            // 6. Обработка ошибок чтения
+            // Ошибки чтения
             reader.addEventListener("readingerror", () => {
-                showError("⚠️ Не удалось прочитать метку. Попробуйте еще раз плотнее прижать.");
+                showError("⚠️ Ошибка чтения. Попробуйте сильнее прижать карту.");
                 resetButton();
             });
 
         } catch (err) {
             console.error(err);
-            showError(`Ошибка запуска NFC: ${err.message}. \nПроверьте, включен ли NFC в настройках телефона.`);
+            showError(`Ошибка: ${err.message}. Проверьте настройки NFC.`);
             resetButton();
         }
     }
 
     function resetButton() {
         btn.classList.remove('scanning');
-        btn.innerText = "📲 НАЧАТЬ СКАНИРОВАНИЕ";
+        btn.innerText = "📲 НАЧАТЬ ГЛУБОКОЕ СКАНИРОВАНИЕ";
     }
 
     function showError(msg) {
